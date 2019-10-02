@@ -1,0 +1,19 @@
+{
+  "name": "testbackend",
+  "version": "1.0.0",
+  "description": "learning backend operations",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DramaLlamaDiscover/TestBackEnd.git"
+  },
+  "author": "Ryan Llamas",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DramaLlamaDiscover/TestBackEnd/issues"
+  },
+  "homepage": "https://github.com/DramaLlamaDiscover/TestBackEnd#readme"
+}

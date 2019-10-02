@@ -1,0 +1,11 @@
+---
+applications:
+- name: test3backend
+  memory: 512mb
+  instances: 1
+  buildpacks:
+  - nodejs_buildpack
+  env:
+    OPTIMIZE_MEMORY: true
+  stack: cflinuxfs3
+  command: npm start
