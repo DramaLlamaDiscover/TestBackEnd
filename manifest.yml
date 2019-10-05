@@ -1,6 +1,6 @@
 ---
 applications:
-- name: test3backend
+- name: test3back
   memory: 512mb
   instances: 1
   buildpacks:
@@ -9,3 +9,7 @@ applications:
     OPTIMIZE_MEMORY: true
   stack: cflinuxfs3
   command: npm start
+  services:
+   - DBTestEnv
+#  services:
+#  - Team4BTChatbotDB

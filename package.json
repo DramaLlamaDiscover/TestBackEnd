@@ -4,7 +4,8 @@
   "description": "learning backend operations",
   "main": "index.js",
   "scripts": {
-    "test": "npm start"
+    "test": "npm start",
+    "start": "node ./bin/www"
   },
   "repository": {
     "type": "git",
@@ -14,6 +15,14 @@
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/DramaLlamaDiscover/TestBackEnd/issues"
+  },
+  "dependencies": {
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "express": "~4.16.1",
+    "http-errors": "~1.6.3",
+    "jade": "~1.11.0",
+    "morgan": "~1.9.1"
   },
   "homepage": "https://github.com/DramaLlamaDiscover/TestBackEnd#readme"
 }
