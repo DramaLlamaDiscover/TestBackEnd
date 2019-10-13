@@ -9,7 +9,5 @@ applications:
     OPTIMIZE_MEMORY: true
   stack: cflinuxfs3
   command: npm start
-  services:
-   - DBTestEnv
 #  services:
 #  - Team4BTChatbotDB
