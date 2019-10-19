@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 sw = require('stopword');
 var WordPOS = require('wordpos'), wordpos = new WordPOS();
+//var similarity = require('./../javascripts/similarity.js');
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -21,11 +22,14 @@ the num of apples in text*/
   res.send(applesText);
 });*/
 
+var nextQuestionIndex = 0;//we will have to find a replacement for this. if we have mutiple users, this will change rapidly.
+var infoForQuestion = [];
+
 var serviceNowquestions = [
-  ["I would like to request user access to", userAccessRequest],
-  ["I would like to request miro access for", miroAccessRequest],
-  ["What are popular services on ServiceNow?", popularServices],
-  ["I would like to ask a buisness technology group a question", btGroupQuestion],//this is a three part question. will ask for the group
+  ["I would like to request user access to", null, userAccessRequest],
+  ["I would like to request miro access for", null, miroAccessRequest],
+  ["What are popular services on ServiceNow?", null, popularServices],
+  ["I would like to ask a buisness technology group a question", ["What buisness group would you like to ask a question?", "What is the question you would like to ask?"], btGroupQuestion]//this is a three part question. will ask for the group
 ];                                                                                   //they would like to contact and what they need help with
 var serviceNowKeyWords = {
   //cookie_Falvor: ["Chocolate Chip", "Mint"],
@@ -132,19 +136,25 @@ function btGroupQuestion(user_input) {
   var teamFound = false;
   var teamName = "";
 
-  router.post('/needInfo', function(req, res) {
-    /*console.log("Attempting to print info");
-    console.log("User response: " + req.body.userinput);
-    var user_input = req.body.userinput;
-    console.log("Canidates are below")
-    var canidates = textCosineSimilarity(user_input, serviceNowquestions)
-    console.log(canidates);
-    res.send(serviceNowquestions[canidates[0][1]][1](user_input));*/
-    res.send("What team would you like to ask a question")
-  });
+  //console.log("About to check BT conditionals")
+  //console.log(nextQuestionIndex)
+  if(nextQuestionIndex == 0)
+  {
+    //console.log("Made it here1")
+    return serviceNowquestions[3][1][nextQuestionIndex]
+  }
+  else if(nextQuestionIndex == 1)
+  {
+    //console.log("Made it here2")
+    return "Your response was: " + user_input + ". The next question was " + serviceNowquestions[3][1][nextQuestionIndex]
+  }
+  else if(nextQuestionIndex == 2)
+  {
+    //console.log("Made it here3")
+    return "Info displayed here"
+  }
 
-
-  while(index < serviceNowKeyWords.discover_teams.length && (teamFound === false))
+/*  while(index < serviceNowKeyWords.discover_teams.length && (teamFound === false))
   {
     console.log("Checking index " + index + " Right now")
     if(user_input.search(serviceNowKeyWords.discover_teams[index]))
@@ -154,7 +164,7 @@ function btGroupQuestion(user_input) {
       teamName = serviceNowKeyWords.discover_teams[index]
     }
     index++;
-  }
+  }*/
 }
 
 
@@ -168,7 +178,7 @@ function btGroupQuestion(user_input) {
   questions.push([userCreatedQuestion, newFunc])
   return questions
 }*/
-
+//-----------------------------------------------------
 function termFreqMap(str) {
         var words = str.split(' ');
         for(var i=0; i<words.length; i++)
@@ -226,7 +236,7 @@ function termFreqMap(str) {
 
     function textCosineSimilarity(user_input, baseQuestionArray) {
       //console.log("Made it here1")
-      var canidateQuestions = []//will store the confidence and the index
+      var canidateQuestions = [];//will store the confidence and the index
       //console.log("Made it here2")
       for(var i = 0; i < baseQuestionArray.length; i++)
       {
@@ -235,7 +245,6 @@ function termFreqMap(str) {
         //console.log(termFreqA);
         var termFreqB = termFreqMap(baseQuestionArray[i][0]);
         //console.log(termFreqB);
-
         // ---------------------------------------------------------------------
         /*
         Here i want to branch to a serperate function that sends the termFreq dict
@@ -277,16 +286,47 @@ function termFreqMap(str) {
       //console.log(canidateQuestions)
       //console.log("exiting")
       return canidateQuestions
-      }
-
+    }
+//------------------------------------------------------------------------
 router.post('/talk', function(req, res) {
   console.log("Attempting to print info");
   console.log("User response: " + req.body.userinput);
-  var user_input = req.body.userinput;
-  console.log("Canidates are below")
-  var canidates = textCosineSimilarity(user_input, serviceNowquestions)
-  console.log(canidates);
-  res.send(serviceNowquestions[canidates[0][1]][1](user_input));
+
+  nextQuestionIndex = 0;
+  console.log("made it here")
+  //reset the number of times the /needinfo route has been used
+  infoForQuestion = [];
+  //will make the array empty in case user asked question that needs more info
+  console.log("Attempting to print info");
+  var user_input = req.body.userinput;//will hold the current user input
+  console.log("Attempting to print info");
+  var canidates = textCosineSimilarity(user_input, serviceNowquestions)//will return a array of indexs sorted from high to low confidence
+  var indexOfHighestConfidence = canidates[0][1];//looks at the hishest confidnece index
+
+  console.log("Canidates are " + canidates);
+  console.log("Index of highest confidence: " + indexOfHighestConfidence)
+
+  var infoN = serviceNowquestions[canidates[0][1]][1] != null;//will return true is more answers are needed from user
+
+  res.send({botSaid: serviceNowquestions[indexOfHighestConfidence][2](user_input), infoNeeded: infoN, indexOfGuessedQuestion: indexOfHighestConfidence});
+});
+
+router.post('/needInfo', function(req, res) {
+  //console.log("Starting the gathering of more info")
+
+  nextQuestionIndex = req.body.indexOfNextQuestion;//will hold the index of the next question that needs to be asked
+  //console.log(req.body.userresponses)
+  infoForQuestion = req.body.userresponses.slice(0);//array of user responses that relate to the current question. holds info for later sql implemetation
+  //console.log(req.body.indexOfGuessedQuestion)
+  var indexOfQuestion = req.body.indexOfGuessedQuestion;//will hold the index of the question that was originally asked
+  //console.log(req.body.userresponse)
+  var latestUserResponse = req.body.userresponse;//will hold the current user response
+  var infoN = nextQuestionIndex < serviceNowquestions[indexOfQuestion][1].length;//will need to change this to make sure it is out of bounds
+  //console.log(infoN)
+  res.send({botSaid: serviceNowquestions[indexOfQuestion][2](latestUserResponse), infoNeeded: infoN})
+
+  //find the index of the original user_input question
+  //call functions again with new user_input and last bot message
 });
 
 module.exports = router;
